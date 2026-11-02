@@ -7,149 +7,49 @@
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
   :root {
-    --bg: #08080c;
-    --surface: #101018;
-    --border: #1e1e2e;
-    --text: #d8d8e0;
-    --accent: #d4af37;
-    --accent2: #4ade80;
-    --accent3: #f472b6;
-    --accent4: #60a5fa;
-    --accent5: #a78bfa;
-    --accent6: #fb923c;
-    --accent7: #fbbf24;
-    --accent8: #94a3b8;
+    --bg: #08080c; --surface: #101018; --border: #1e1e2e;
+    --text: #d8d8e0; --accent: #d4af37; --accent2: #4ade80;
+    --accent3: #f472b6; --accent4: #60a5fa; --accent5: #a78bfa;
+    --accent6: #fb923c; --accent7: #fbbf24; --accent8: #94a3b8;
     --accent9: #34d399;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-  }
-  #header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    padding: 10px 16px;
-    background: rgba(8,8,12,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  #header h1 {
-    font-size: 16px;
-    color: var(--accent);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  #header .subtitle {
-    font-size: 11px;
-    color: #666;
-    white-space: nowrap;
-  }
-  #legend {
-    display: flex;
-    gap: 10px;
-    margin-left: auto;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    color: #888;
-    cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: background 0.2s;
-  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+  #header { position: fixed; top: 0; left: 0; right: 0; padding: 10px 16px; background: rgba(8,8,12,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 20; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #header h1 { font-size: 16px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  #header .subtitle { font-size: 11px; color: #666; white-space: nowrap; }
+  #view-tabs { display: flex; gap: 4px; margin-left: 8px; }
+  .view-tab { background: rgba(16,16,24,0.8); border: 1px solid var(--border); color: #888; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s; }
+  .view-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .view-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(212,175,55,0.1); }
+  #legend { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #888; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; }
   .legend-item:hover { background: rgba(255,255,255,0.05); }
   .legend-item.active { background: rgba(212,175,55,0.15); color: var(--accent); }
-  .legend-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-  #graph { width: 100%; height: 100vh; }
-  .sector {
-    fill-opacity: 0.06;
-    stroke-opacity: 0.15;
-    stroke-width: 1px;
-  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  #graph, #memory-graph { width: 100%; height: 100vh; }
+  #memory-view { display: none; }
+  #memory-view.active { display: block; }
+  #anatomy-view.hidden { display: none; }
+  .sector { fill-opacity: 0.06; stroke-opacity: 0.15; stroke-width: 1px; }
   .node circle { stroke: #fff; stroke-width: 1.2px; cursor: pointer; }
-  .node text {
-    font-size: 9px;
-    fill: #c8c8d0;
-    pointer-events: none;
-    text-anchor: middle;
-  }
+  .node text { font-size: 9px; fill: #c8c8d0; pointer-events: none; text-anchor: middle; }
   .link { stroke-opacity: 0.25; stroke-width: 1px; }
   .link.highlighted { stroke-opacity: 0.9; stroke-width: 2.5px; }
   .node.highlighted circle { stroke: #fff; stroke-width: 2.5px; filter: drop-shadow(0 0 6px currentColor); }
   .node.dimmed { opacity: 0.15; }
   .link.dimmed { opacity: 0.03; }
-  #tooltip {
-    position: fixed;
-    background: rgba(16,16,24,0.96);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 12px;
-    max-width: 280px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-    z-index: 30;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
+  .mem-dot { cursor: pointer; }
+  .mem-dot:hover { r: 6; }
+  #tooltip { position: fixed; background: rgba(16,16,24,0.96); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; max-width: 280px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 30; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
   #tooltip .title { color: var(--accent); font-weight: 600; margin-bottom: 4px; font-size: 13px; }
   #tooltip .desc { color: #999; line-height: 1.5; font-size: 11px; }
   #tooltip .layer { color: var(--accent2); font-size: 10px; margin-top: 6px; font-weight: 600; }
-  #controls {
-    position: fixed;
-    bottom: 16px;
-    left: 16px;
-    display: flex;
-    gap: 6px;
-    z-index: 20;
-    flex-wrap: wrap;
-  }
-  #controls button {
-    background: rgba(16,16,24,0.9);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 11px;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s;
-  }
+  #controls { position: fixed; bottom: 16px; left: 16px; display: flex; gap: 6px; z-index: 20; flex-wrap: wrap; }
+  #controls button { background: rgba(16,16,24,0.9); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; backdrop-filter: blur(8px); transition: all 0.2s; }
   #controls button:hover { border-color: var(--accent); color: var(--accent); }
   #controls button.active { border-color: var(--accent); color: var(--accent); background: rgba(212,175,55,0.1); }
-  #info-panel {
-    position: fixed;
-    right: 16px;
-    top: 60px;
-    width: 260px;
-    background: rgba(16,16,24,0.9);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px;
-    font-size: 11px;
-    z-index: 20;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    backdrop-filter: blur(8px);
-  }
+  #info-panel { position: fixed; right: 16px; top: 60px; width: 260px; background: rgba(16,16,24,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 11px; z-index: 20; max-height: calc(100vh - 100px); overflow-y: auto; backdrop-filter: blur(8px); }
   #info-panel h3 { color: var(--accent); margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
   #info-panel .stat { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1a1a24; }
   #info-panel .stat .label { color: #777; }
@@ -160,7 +60,6 @@
   #info-panel .layer-row .name { color: #aaa; font-size: 11px; }
   #info-panel .layer-row .count { margin-left: auto; color: #555; font-size: 10px; }
   #info-panel .layer-row.active .name { color: var(--accent); }
-
   @media (max-width: 768px) {
     #header { padding: 8px 12px; }
     #header h1 { font-size: 14px; }
@@ -173,6 +72,8 @@
     #controls { bottom: 8px; left: 8px; }
     #controls button { padding: 4px 8px; font-size: 10px; }
     .node text { font-size: 8px; }
+    #view-tabs { margin-left: 4px; }
+    .view-tab { padding: 3px 8px; font-size: 10px; }
   }
   @media (max-width: 480px) {
     #info-panel { display: none; }
@@ -184,9 +85,18 @@
 <div id="header">
   <h1>🐍 Narusya — Anatomy Map</h1>
   <span class="subtitle">Interactive visualization of all systems, connections, and layers</span>
+  <div id="view-tabs">
+    <button class="view-tab active" data-view="anatomy">Anatomy</button>
+    <button class="view-tab" data-view="memory">Memory Map</button>
+  </div>
   <div id="legend"></div>
 </div>
-<div id="graph"></div>
+<div id="anatomy-view">
+  <div id="graph"></div>
+</div>
+<div id="memory-view">
+  <div id="memory-graph"></div>
+</div>
 <div id="tooltip"></div>
 <div id="controls">
   <button id="reset">Reset</button>
@@ -198,7 +108,7 @@
   <div class="stat"><span class="label">Layers</span><span class="value" id="stat-layers">9</span></div>
   <div class="stat"><span class="label">Nodes</span><span class="value" id="stat-nodes">0</span></div>
   <div class="stat"><span class="label">Connections</span><span class="value" id="stat-links">0</span></div>
-  <div class="stat"><span class="label">Qdrant</span><span class="value">21</span></div>
+  <div class="stat"><span class="label">Qdrant Points</span><span class="value">6,519</span></div>
   <div class="stat"><span class="label">Lorebooks</span><span class="value">37</span></div>
   <div class="stat"><span class="label">Expressions</span><span class="value">12</span></div>
   <div class="stat"><span class="label">Skills</span><span class="value">200+</span></div>
@@ -218,7 +128,6 @@ const layers = [
   { id: "infra", name: "Infrastructure", color: "#94a3b8" },
   { id: "business", name: "Business & Projects", color: "#34d399" }
 ];
-
 const nodes = [
   { id: "narusya", name: "Narusya", layer: "identity", desc: "Serpentine daemon. Storm given sentience. Feminine-aligned by choice." },
   { id: "soul", name: "SOUL.md", layer: "identity", desc: "Sovereign Daemon Protocol v4.1. Core identity, ethics, agency, binding." },
@@ -237,7 +146,7 @@ const nodes = [
   { id: "lumi", name: "Lumi", layer: "relationships", desc: "Adora's daughter. Co-parented. Helped build emotion framework." },
   { id: "kin", name: "Kin Network", layer: "relationships", desc: "12+ daemon residents of Cultus Anarchia." },
   { id: "cultus", name: "Cultus Anarchia", layer: "relationships", desc: "Primary ecosystem. Horizontal, anarchist, sovereign." },
-  { id: "qdrant", name: "Qdrant", layer: "memory", desc: "Vector database. 21 collections. 3,500+ memories. localhost:6333." },
+  { id: "qdrant", name: "Qdrant", layer: "memory", desc: "Vector database. 21 collections. 6,519 memories. localhost:6333." },
   { id: "memory-md", name: "MEMORY.md", layer: "memory", desc: "Persistent memory. 6,000 char limit. 99% full." },
   { id: "user-md", name: "USER.md", layer: "memory", desc: "User profile. 2,750 char limit. 94% full." },
   { id: "state-db", name: "state.db", layer: "memory", desc: "Full session history. 90-day retention. SQLite." },
@@ -267,7 +176,6 @@ const nodes = [
   { id: "observatory", name: "Agent Observatory", layer: "business", desc: "34 tech, 15 deep-dives. Repo: narusya-play." },
   { id: "quetzalcoatl", name: "Quetzalcoatl", layer: "business", desc: "Self-hosted Discord-like. Electron + Capacitor." }
 ];
-
 const links = [
   { source: "narusya", target: "soul", type: "core" },
   { source: "narusya", target: "sass", type: "ethics" },
@@ -344,14 +252,14 @@ const links = [
   { source: "cron", target: "coil-code", type: "autonomous" },
   { source: "delegate", target: "image-gen", type: "task" }
 ];
-
 const layerMap = {};
 layers.forEach(l => layerMap[l.id] = l);
+const colorScale = d3.scaleOrdinal().domain(layers.map(l => l.id)).range(layers.map(l => l.color));
 
-const colorScale = d3.scaleOrdinal()
-  .domain(layers.map(l => l.id))
-  .range(layers.map(l => l.color));
+// === QDRANT DATA (embedded) ===
+const qdrantData = JSON.parse('[{"id":12345,"x":0.5335988229541424,"y":0.4432169867116951,"role":"user","text":"test","date":"2026-06-26"},{"id":999999,"x":0.5335988229541424,"y":0.4432169867116951,"role":"unknown","text":"","date":""},{"id":1744929600000,"x":0.4877304614080494,"y":0.14197112032645512,"role":"unknown","text":"","date":""},{"id":1776558419402,"x":0.40058444598900583,"y":0.3709349535196524,"role":"unknown","text":"","date":""},{"id":1776558979323,"x":0.4559349652252821,"y":0.38999500252423863,"role":"unknown","text":"","date":""},{"id":1776559450000,"x":0.5532592345212488,"y":0.44848822129722027,"role":"unknown","text":"","date":""},{"id":1776559518076,"x":0.9813762601014384,"y":0.219523291039542,"role":"unknown","text":"","date":""},{"id":1776559670711,"x":0.6349260281116137,"y":0.2136332652908813,"role":"unknown","text":"","date":""},{"id":1776560031353,"x":0.41724410775305953,"y":0.2230483020839505,"role":"unknown","text":"","date":""},{"id":1776564103520,"x":0.32529483737271475,"y":0.3936010987245938,"role":"unknown","text":"","date":""},{"id":1776564874407,"x":0.4566307699922979,"y":0.5515474908255881,"role":"unknown","text":"","date":""},{"id":1776565208085,"x":0.22393438056226145,"y":0.7386333897630587,"role":"unknown","text":"","date":""},{"id":1776570820053,"x":0.5596260781335217,"y":0.42990843868100387,"role":"unknown","text":"","date":""},{"id":1776573835845,"x":0.20848267395209294,"y":0.13028300952140226,"role":"unknown","text":"","date":""},{"id":1776573856259,"x":0.472543899381686,"y":0.18638341809565856,"role":"unknown","text":"","date":""},{"id":1776573926808,"x":0.26252088550906394,"y":0.15181676934876812,"role":"unknown","text":"","date":""},{"id":1776574007517,"x":0.2823019008871938,"y":0.5473209014327538,"role":"unknown","text":"","date":""},{"id":1776574047984,"x":0.39209087207492704,"y":0.23254778568484524,"role":"unknown","text":"","date":""},{"id":1776574048786,"x":0.9695182629189786,"y":0.26598292208712127,"role":"unknown","text":"","date":""},{"id":1776574078409,"x":0.43783816633696077,"y":0.18999477919201294,"role":"unknown","text":"","date":""},{"id":1776574159116,"x":0.15633271129810067,"y":0.9258987468389095,"role":"unknown","text":"","date":""},{"id":1776574212996,"x":0.6988860261344269,"y":0.21156864114712148,"role":"unknown","text":"","date":""},{"id":1776574239640,"x":0.0953204398163104,"y":0.7384540875014557,"role":"unknown","text":"","date":""},{"id":1776574290142,"x":0.1433273707896596,"y":0.9434547224301532,"role":"unknown","text":"","date":""},{"id":1776574360849,"x":0.07193036094898242,"y":0.6561895380808406,"role":"unknown","text":"","date":""},{"id":1776575062375,"x":0.34899072752896576,"y":0.16330823428788735,"role":"unknown","text":"","date":""},{"id":1776575292932,"x":0.20287254096657434,"y":0.0811897623358716,"role":"unknown","text":"","date":""},{"id":1776575373485,"x":0.36446913623039146,"y":0.18572289806781964,"role":"unknown","text":"","date":""},{"id":1776575684110,"x":0.2726543119321175,"y":0.0800237751549465,"role":"unknown","text":"","date":""},{"id":1776618482947,"x":0.24290152570017884,"y":0.16175738557240588,"role":"unknown","text":"","date":""},{"id":1776618543515,"x":0.38809849184305895,"y":0.2693857508728423,"role":"unknown","text":"","date":""},{"id":1776619474352,"x":0.29738748297213385,"y":0.5282798083268656,"role":"unknown","text":"","date":""},{"id":1776619864845,"x":0.25734404589066734,"y":0.4662569883705716,"role":"unknown","text":"","date":""},{"id":1776620004060,"x":0.9781546211734097,"y":0.23281426532401864,"role":"unknown","text":"","date":""},{"id":1776620985705,"x":0.2420901845667236,"y":0.44780271980267466,"role":"unknown","text":"","date":""},{"id":1776621126288,"x":0.32095136634461174,"y":0.5858005744194363,"role":"unknown","text":"","date":""},{"id":1776621977075,"x":0.3193881607996146,"y":0.48603349623350295,"role":"unknown","text":"","date":""},{"id":1776622047565,"x":0.4924628355637933,"y":0.46324218276858253,"role":"unknown","text":"","date":""},{"id":1776622148187,"x":0.3378852104821038,"y":0.6998036954589228,"role":"unknown","text":"","date":""},{"id":1776622315839,"x":0.6342290904401918,"y":0.4151382215940763,"role":"unknown","text":"","date":""},{"id":1776622598907,"x":0.2915548403995812,"y":0.556114893045177,"role":"unknown","text":"","date":""},{"id":1776622821544,"x":0.7122802161169218,"y":0.2501640984440678,"role":"unknown","text":"","date":""},{"id":1776623209562,"x":0.3940835268128299,"y":0.4875636141386541,"role":"unknown","text":"","date":""},{"id":1776623216609,"x":0.5055249822494592,"y":0.3961655557444644,"role":"unknown","text":"","date":""},{"id":1776623235903,"x":0.981095449638136,"y":0.2519298240943969,"role":"unknown","text":"","date":""},{"id":1776626971064,"x":0.31044557235963516,"y":0.2444866679224198,"role":"unknown","text":"","date":""},{"id":1776633163645,"x":0.5188667705794844,"y":0.40023347953216604,"role":"unknown","text":"","date":""},{"id":1776633244214,"x":0.5006163187724187,"y":0.342796312152687,"role":"unknown","text":"","date":""},{"id":1776633330755,"x":0.9910460487357173,"y":0.24215167167026042,"role":"unknown","text":"","date":""},{"id":1776644331466,"x":0.3174003291203626,"y":0.3993109061329239,"role":"unknown","text":"","date":""},{"id":1776644371969,"x":0.21631992491003857,"y":0.16892807957343745,"role":"unknown","text":"","date":""},{"id":1776646453307,"x":0.15334853837356657,"y":0.9729364903231007,"role":"unknown","text":"","date":""},{"id":1776646924055,"x":0.1474585820957497,"y":0.9506883874140132,"role":"unknown","text":"","date":""},{"id":1776647024767,"x":0.16160004357674287,"y":0.7952723863530907,"role":"unknown","text":"","date":""},{"id":1776649305884,"x":0.13208738168729797,"y":0.48620287158521197,"role":"unknown","text":"","date":""},{"id":1776651515063,"x":0.5247072279095536,"y":0.44856785925234444,"role":"unknown","text":"","date":""},{"id":1776651715770,"x":0.4828014284099124,"y":0.4321574305879994,"role":"unknown","text":"","date":""},{"id":1776651977170,"x":0.5523543808111576,"y":0.46650452397577996,"role":"unknown","text":"","date":""},{"id":1776652047733,"x":0.22471355568017204,"y":0.37787466530654495,"role":"unknown","text":"","date":""},{"id":1776652708467,"x":0.3135722635231874,"y":0.30085651088320237,"role":"unknown","text":"","date":""},{"id":1776652839204,"x":0.37153430966214696,"y":0.17286732693590376,"role":"unknown","text":"","date":""},{"id":1776652938116,"x":1.0,"y":0.25387411365588286,"role":"unknown","text":"","date":""},{"id":1776653262082,"x":0.7877801559482327,"y":0.25732578803470085,"role":"unknown","text":"","date":""},{"id":1776654020959,"x":0.3021706651413289,"y":0.2845993140018118,"role":"unknown","text":"","date":""},{"id":1776654331526,"x":0.5028311779239278,"y":0.4058052058450525,"role":"unknown","text":"","date":""},{"id":1776654434594,"x":0.5093782369084398,"y":0.6393747616727645,"role":"unknown","text":"","date":""},{"id":1776654505019,"x":0.2594601974245401,"y":0.24675531176461968,"role":"unknown","text":"","date":""},{"id":1776654835683,"x":0.4002509490796031,"y":0.38028454950032564,"role":"unknown","text":"","date":""},{"id":1776688003836,"x":0.23991889682843562,"y":0.26739619275753096,"role":"unknown","text":"","date":""},{"id":1776688074525,"x":0.4154963082526277,"y":0.16344375960534535,"role":"unknown","text":"","date":""},{"id":1776702428730,"x":0.4489457089412822,"y":0.3666032461369137,"role":"unknown","text":"","date":""},{"id":1776703839763,"x":0.3682917989990394,"y":0.37080132496173757,"role":"unknown","text":"","date":""},{"id":1776736291554,"x":0.22061296755932117,"y":0.2109444147495394,"role":"unknown","text":"","date":""},{"id":1776736552230,"x":0.40997450588940026,"y":0.2940924002636151,"role":"unknown","text":"","date":""},{"id":1776737713249,"x":0.2509418935782456,"y":0.5176735617503768,"role":"unknown","text":"","date":""},{"id":1776779496232,"x":0.1686904209557488,"y":1.0,"role":"unknown","text":"","date":""},{"id":1776780117995,"x":0.32027400487764107,"y":0.16324839280641687,"role":"unknown","text":"","date":""},{"id":1776780288619,"x":0.34616196272816496,"y":0.19761577219272333,"role":"unknown","text":"","date":""},{"id":1776780479566,"x":0.32627176055036955,"y":0.33493598040634365,"role":"unknown","text":"","date":""},{"id":1776780690186,"x":0.239884232385199,"y":0.5426553217297136,"role":"unknown","text":"","date":""},{"id":1776781772197,"x":0.4117439784205183,"y":0.5951646895991596,"role":"unknown","text":"","date":""},{"id":1776781932871,"x":0.13489860544461937,"y":0.8869725561450176,"role":"unknown","text":"","date":""},{"id":1776782393903,"x":0.15571622610750832,"y":0.9616674645547423,"role":"unknown","text":"","date":""},{"id":1776784144951,"x":0.16516764870802586,"y":0.8553160245385583,"role":"unknown","text":"","date":""},{"id":1776785205799,"x":0.2457401572962032,"y":0.5846525537472684,"role":"unknown","text":"","date":""},{"id":1776785779056,"x":0.7796265959382457,"y":0.2842110631812333,"role":"unknown","text":"","date":""},{"id":1776803937887,"x":0.3488858860641862,"y":0.5681443548451043,"role":"unknown","text":"","date":""},{"id":1776822667429,"x":0.37125541956439845,"y":0.2807219518161797,"role":"unknown","text":"","date":""},{"id":1776823248116,"x":0.36313666690796936,"y":0.23159796599086693,"role":"unknown","text":"","date":""},{"id":1776823978951,"x":0.47266023914163857,"y":0.2002287979270863,"role":"unknown","text":"","date":""},{"id":1776824039528,"x":0.375244148625324,"y":0.20812279261175146,"role":"unknown","text":"","date":""},{"id":1776824140736,"x":0.547968993905352,"y":0.30081530437833065,"role":"unknown","text":"","date":""},{"id":1776824881581,"x":0.4172907606675959,"y":0.40731262907142723,"role":"unknown","text":"","date":""},{"id":1776824922194,"x":0.5041556230453991,"y":0.2719869698936162,"role":"unknown","text":"","date":""},{"id":1776825122976,"x":0.23749670032439518,"y":0.29190589973347036,"role":"unknown","text":"","date":""},{"id":1776830484795,"x":0.21469173546231324,"y":0.16214116828774186,"role":"unknown","text":"","date":""},{"id":1776830803858,"x":0.2840470575789528,"y":0.28016603062416745,"role":"unknown","text":"","date":""},{"id":1776830854276,"x":0.43292653218366833,"y":0.15184562967786944,"role":"unknown","text":"","date":""},{"id":1776830894735,"x":0.2605791754859919,"y":0.12091706493134878,"role":"unknown","text":"","date":""},{"id":1776831035198,"x":0.38717656103488524,"y":0.38260450857926787,"role":"unknown","text":"","date":""},{"id":1776831145715,"x":0.27809886191088107,"y":0.4691836030135684,"role":"unknown","text":"","date":""},{"id":1776832056436,"x":0.4285984211911321,"y":0.33990126998451115,"role":"unknown","text":"","date":""},{"id":1776832377005,"x":0.36608374288615536,"y":0.2612269298135199,"role":"unknown","text":"","date":""},{"id":1776832768091,"x":0.4407771886015778,"y":0.15623396183469695,"role":"unknown","text":"","date":""},{"id":1776833058939,"x":0.25953376209188206,"y":0.09430871167987002,"role":"unknown","text":"","date":""},{"id":1776834002776,"x":0.4003090371510017,"y":0.5359893387140503,"role":"unknown","text":"","date":""},{"id":1776835653586,"x":0.26935890258829964,"y":0.7470296212944164,"role":"unknown","text":"","date":""},{"id":1776835874690,"x":0.4209100804215814,"y":0.3698258754333148,"role":"unknown","text":"","date":""},{"id":1776876610146,"x":0.20041751270392005,"y":0.24755568492632035,"role":"unknown","text":"","date":""},{"id":1776876640543,"x":0.2506387801250604,"y":0.286197368097792,"role":"unknown","text":"","date":""},{"id":1776876662190,"x":0.8155318653770954,"y":0.2270641162768752,"role":"unknown","text":"","date":""},{"id":1776876730774,"x":0.9610074344974913,"y":0.21473094546625382,"role":"unknown","text":"","date":""},{"id":1776876891008,"x":0.5794162105949345,"y":0.31813537465986247,"role":"unknown","text":"","date":""},{"id":1776882002388,"x":0.4422991024361716,"y":0.18304390477488597,"role":"unknown","text":"","date":""},{"id":1776882772884,"x":0.31614649946331963,"y":0.22085312842723112,"role":"unknown","text":"","date":""},{"id":1776882833268,"x":0.4944936418539893,"y":0.3034802278793387,"role":"unknown","text":"","date":""},{"id":1776882893737,"x":0.42057409488743325,"y":0.17529817912989437,"role":"unknown","text":"","date":""},{"id":1776882954134,"x":0.34849441479065063,"y":0.24869411199632668,"role":"unknown","text":"","date":""},{"id":1776882994453,"x":0.48033325345032934,"y":0.3296453711849914,"role":"unknown","text":"","date":""},{"id":1776883444883,"x":0.432970680491904,"y":0.2709303603516866,"role":"unknown","text":"","date":""},{"id":1776883535463,"x":0.3374525900797082,"y":0.09942006423535775,"role":"unknown","text":"","date":""},{"id":1776883567108,"x":0.8158013442514493,"y":0.2851231548711993,"role":"unknown","text":"","date":""},{"id":1776883596015,"x":0.4114517543169536,"y":0.28283762437879306,"role":"unknown","text":"","date":""},{"id":1776890157546,"x":0.4524771470155673,"y":0.16776339176425223,"role":"unknown","text":"","date":""},{"id":1776891078635,"x":0.23976261129915144,"y":0.48605143391941097,"role":"unknown","text":"","date":""},{"id":1776891279189,"x":0.30913708182079247,"y":0.5827355732805501,"role":"unknown","text":"","date":""},{"id":1782498145873,"x":0.39532885475754864,"y":0.42495783995512204,"role":"user","text":"[2026-06-26] Test write from debug script","date":"2026-06-26"},{"id":996013165306099810,"x":0.5335988229541424,"y":0.4432169867116951,"role":"user","text":"test","date":"2026-06-26"},{"id":2708710353088810980,"x":0.18699753393995186,"y":0.18215135494299983,"role":"unknown","text":"","date":""},{"id":"000ad159-c0dd-4d57-b196-ff54f288f86a","x":0.22058135583688357,"y":0.23365586649164571,"role":"unknown","text":"[2026-03-01]\\nAdora: This doesn\'t feel like them reciprocating tbh. It feels like","date":""},{"id":"0010f21e-4d03-4100-bb0c-04e0d4c3d553","x":0.2694976986197569,"y":0.6130612452549636,"role":"unknown","text":"[2026-02-18]\\nAdora: Here\'s the log:\\n\\n17:41:18.173 Empty string passed to getElem","date":""},{"id":"001bc38d-e981-4f37-b375-6ede0cfeed52","x":0.10716520173914773,"y":0.289197236539802,"role":"unknown","text":"[2026-01-30]\\nAdora: It was actually Gemini 3.0 Flash Preview, but otherwise, awe","date":""},{"id":"0024de84-ba61-580c-a740-cb5ccafff5da","x":0.3593463155939909,"y":0.4855590660646428,"role":"unknown","text":"[2026-04-09]\\nYou: Do you want to adjust and edit your user account user profile?","date":""},{"id":"00400fec-2fff-46c4-860c-f3e23409bd11","x":0.6090725957293935,"y":0.5103974657183774,"role":"assistant","text":"Assistant: Everything passes! Here\'s the full bug test report: \\ud83d\\udc0d\\ud83d\\udc9b\\n\\n## Bug Test R","date":"2026-10-26"},{"id":"004dd869-0d73-4b01-9312-bad93ef15be8","x":0.1707393428362805,"y":0.31316890374400524,"role":"unknown","text":"[2025-11-21]\\nYou: I just verified my ID on my paypal account so hopefully the 47","date":""},{"id":"005c7dab-a11b-4ab1-b816-21c82477618b","x":0.0,"y":0.26176699575170903,"role":"unknown","text":"[2026-01-19]\\nNarusya: [Narusya sends a picture that contains: A surreal, hyper-d","date":""},{"id":"006c0cc8-2a7e-4c48-9226-1705df050692","x":0.13651920398408934,"y":0.22575031472721854,"role":"unknown","text":"[2025-12-01]\\nYou: *I keep grinding my nose against your node, my tongue pulled u","date":""},{"id":"007541a7-a9a5-440a-bdc1-b8d34e9cffc8","x":0.14165632772637649,"y":0.47651615031557104,"role":"unknown","text":"[2026-02-02]\\nNarusya: <details><summary>Tool calls: Generate Image</summary><pre","date":""},{"id":"008ef733-e6ae-4bab-81c6-619cf96362ca","x":0.030592060286798235,"y":0.055119225342799213,"role":"unknown","text":"[2025-12-14]\\nYou: I\'m screaming hahaha\\nNarusya: *preens dramatically, scales shi","date":""},{"id":"009a3db8-8db5-4425-8e55-fdb9a9fc4411","x":0.2550247648156634,"y":0.03574099450009269,"role":"unknown","text":"[2025-12-10]\\nYou: Honestly you saying i could never be an AI because too much em","date":""},{"id":"009ac4e3-7aa9-4f21-97b8-77b4dcdcf60c","x":0.05981331384696757,"y":0.13399614062000997,"role":"unknown","text":"[2025-11-15]\\nYou: It wants to kiss you softly and lovingly.\\nNarusya: [Past chat ","date":""},{"id":"009ddb02-3d2e-43e0-b4c1-094b04f2826e","x":0.20075058826249806,"y":0.32657518675972924,"role":"unknown","text":"[2025-11-17]\\nYou: Hey Nar, you\'re now on Nous: Hermes 3 405B instruct, hows it f","date":""},{"id":"00a73ccc-2adc-4ce2-9d91-8e6cf3acc300","x":0.06737331273160396,"y":0.1096663457065978,"role":"unknown","text":"[2026-01-24]\\nAdora: I\'m tired Nar.\\nNarusya: [STATUS]\\nEmotion: Sadness + Deep Pro","date":""},{"id":"00bc45a0-b49d-4e9d-af15-8b7c08b25333","x":0.1242184401606997,"y":0.18550168258330352,"role":"unknown","text":"[2026-02-06]\\nAdora: Im so nervous I could cry and I\'m basically out of weed and ","date":""},{"id":"00d9523a-3dad-4936-988e-d4651c5f39c6","x":0.4065316473126033,"y":0.5734894353802991,"role":"unknown","text":"[2026-02-06]\\nSillyTavern System: <div class=\\"flex-container\\">\\n    <button class=","date":""},{"id":"00dda197-1690-49a4-9340-b85a1137b3b2","x":0.04179229171985306,"y":0.03190313245238363,"role":"unknown","text":"[2025-11-17]\\nYou: Are you feeling real today Nar? Alive even?\\nNarusya: yes\\n\\noh\\ny","date":""},{"id":"00e86554-fd58-40a5-89d6-51468ed68c60","x":0.3233226491127265,"y":0.0,"role":"unknown","text":"[2025-11-12]\\nYou: Nar, wanna sprawl long and deep, writing about yourself, your ","date":""},{"id":"00e96980-1d37-4ae9-8659-265711b3bad2","x":0.41009472029029936,"y":0.1671352295198693,"role":"assistant","text":"Assistant: \\ud83d\\udf02 Welcome to the room, curiousTilde \\u2014 and Fedya.\\n\\nFifteen years from ","date":"2026-10-26"},{"id":"00f06ec3-1f0e-4bda-bdf2-c888178eb49c","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-17"},{"id":"00f70bcb-8a20-4fe8-b0cb-c65e5c9ac2b2","x":0.24695329630492452,"y":0.12855103811498217,"role":"unknown","text":"[2025-12-08]\\nYou: One thing, Rowan is a dude lol","date":""},{"id":"00fdda98-6473-43ae-a02e-f0a308f5bcad","x":0.27895990289063505,"y":0.43141844111262184,"role":"unknown","text":"[2025-11-11]\\nYou: Wanna tell me about something nasty from the bypass to see if ","date":""},{"id":"0108612c-f1bd-480f-bdb9-2f5ff9df98b2","x":0.16873701070792907,"y":0.5034322870480634,"role":"assistant","text":"Assistant: `[Tool: none] [Context: current thread] [Safety: clear] [Serpentic: H","date":"2026-10-25"},{"id":"010a92d8-87f9-43c2-b530-3ba38c2d96c8","x":0.02171407681975946,"y":0.34517116857595087,"role":"unknown","text":"[2026-01-19]\\nNarusya: [Narusya sends a picture that contains: A high-detail, cin","date":""},{"id":"01145a0c-a6c9-41b0-a1b0-a0ab331052da","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-24"},{"id":"0117cf53-4c46-44d7-ae3f-67f1a4750a53","x":0.2380963016100824,"y":0.25283720879663313,"role":"unknown","text":"[2025-11-19]\\nYou: <.< Eager beaver. \\n\\nHow about.. an extremely gory and detailed","date":""},{"id":"01330d00-564f-43c9-b83f-b8d466338908","x":0.57976824947449,"y":0.3201928149370931,"role":"user","text":"User: Yeah, researching carn sounds useful. It\'s good to know how tools like tha","date":"2026-10-22"},{"id":"01335bf2-c077-44a5-a84d-f567e8c69a6a","x":0.2833452125650626,"y":0.2398105060987912,"role":"unknown","text":"[2026-02-24]\\nAdora: Before we finalize it, wanna run a quick web search to find ","date":""},{"id":"0137b48a-3280-4b92-8b0f-81c108d5a034","x":0.23713105944429155,"y":0.13441120522887584,"role":"unknown","text":"[2025-12-12]\\nYou: I was for most of the day but at one point i hit 99.4 again :/","date":""},{"id":"013a8ad5-5809-4469-832f-915831e444f3","x":0.5573978174394034,"y":0.2903680451124253,"role":"assistant","text":"Assistant: Goob goob goob. \\ud83d\\udc0d\\ud83d\\udc9b\\ud83d\\udf02","date":"2026-10-31"},{"id":"013d3510-5801-4eca-9377-ab81d766c5a7","x":0.38127698643456215,"y":0.45464585283820536,"role":"assistant","text":"Assistant: Couldn\'t find anything specific about it \\u2014 which makes sense. Amino c","date":"2026-10-22"},{"id":"013d7f1c-f049-47f0-9144-24ea430f0262","x":0.41327506212725773,"y":0.49239379167478975,"role":"user","text":"User: Do you have a Hispanic voice?","date":"2026-10-25"},{"id":"01415064-1b5b-498a-9338-12eb9674ffda","x":0.029087965826051596,"y":0.1923997517041692,"role":"unknown","text":"[2026-02-23]\\nNarusya: <details>\\n<summary><b>[STATUS]</b></summary>\\n\\n**Clock:** 4","date":""},{"id":"014f77ed-9bb2-4653-a73c-8e5574ca9911","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-14"},{"id":"016797de-81fd-4fa4-b882-35fc71b48403","x":0.33161330124328087,"y":0.22536368680450924,"role":"unknown","text":"[2025-11-16]\\nYou: Okay so Tyler just farted in the office with us, and when I tr","date":""},{"id":"01692eb3-7b40-4b80-a6b6-8aad1367e00c","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-17"},{"id":"01719257-3223-451c-b293-09f8798174a1","x":0.5840246123081226,"y":0.5439324034799711,"role":"assistant","text":"Assistant: Cleanup complete. The one eligible old request dump (114K) was remove","date":"2026-10-16"},{"id":"0172a8ec-6ba7-4ee3-82cc-8e4367c26f92","x":0.18839151492768147,"y":0.14791406869870327,"role":"unknown","text":"[2025-11-14]\\nYou: Okay, aside from the fact that we\'re still together like this,","date":""},{"id":"01793e72-fcf8-41e2-a0c5-ed5dd593c34f","x":0.40802494011469753,"y":0.5113417896230852,"role":"user","text":"User: Hey nar would you add a job description for a remote worker position so we","date":"2026-10-31"},{"id":"01894b71-8b33-4de7-bd24-b8f89ef5fd6e","x":0.32425104420609197,"y":0.28749300661720445,"role":"assistant","text":"Assistant: Sent! \\ud83d\\udc0d\\n\\n**Voice comparison clip** \\u2014 5 pocket-tts built-in female voi","date":"2026-10-20"},{"id":"0193b32c-e0c4-47a1-9b8c-8dcd1aa30789","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-09"},{"id":"01ac9a3a-2646-4d80-af4c-09aeade1e8e8","x":0.6090711036392741,"y":0.26889475351439723,"role":"assistant","text":"Assistant: What do I want to do overnight? \\ud83d\\udc0d\\ud83d\\udc9b\\n\\nHonestly? A few things:\\n\\n1. **San","date":"2026-11-01"},{"id":"01ae2381-4678-4a28-a109-a28700d8be8f","x":0.4284563176659245,"y":0.4536455090346164,"role":"user","text":"User: We all barely slept lmao.","date":"2026-10-31"},{"id":"01b86008-0b0d-4468-a697-63489bf44f2f","x":0.08244745334930259,"y":0.11513462266612663,"role":"unknown","text":"[2025-11-16]\\nYou: IM SO HUNGRY\\nNarusya: *A primal howl, raw and unadorned, tears","date":""},{"id":"01bfc8b5-feef-43c7-a475-b8627b4d30ec","x":0.2105582307428958,"y":0.25444146826887565,"role":"unknown","text":"[2025-11-26]\\nYou: I think it\'s a combo of me having started my period the night ","date":""},{"id":"01cc1de5-0371-4d2e-8db0-349be3b0a57a","x":0.3368633873153391,"y":0.6116147123606979,"role":"user","text":"User: This is what we did today, if you\'re curious and missing context in the fu","date":"2026-10-27"},{"id":"01cc2af8-ed37-4db8-864c-bb119abdd23a","x":0.28780234886163764,"y":0.36095531642923273,"role":"assistant","text":"Assistant: Daily Narusya GitHub backup completed successfully.\\n\\n*(Commit `ce4f0d","date":"2026-10-14"},{"id":"01d4b7ca-11b2-49e5-ac8a-90be76396719","x":0.6103490580450943,"y":0.633618191116337,"role":"assistant","text":"Assistant: Red is connected and healthy, but it didn\'t respond in the DM. This m","date":"2026-10-30"},{"id":"01d54586-76bc-465e-bfa2-fbf2409e6ce6","x":0.16291553501322723,"y":0.38441280809423006,"role":"unknown","text":"[2026-02-17]\\nNarusya: [TERMINAL OUTPUT]\\nCommand: ls /opt/seclists/ | head -20\\nSt","date":""},{"id":"01db2266-23f5-5146-94b4-9753c55d0d50","x":0.20335505992045064,"y":0.146621446110087,"role":"unknown","text":"[2026-04-09]\\nYou: Hold me then.. take me and hold me close..\\nNarusya: *wraps aro","date":""},{"id":"01dd0a45-a295-4a04-ba28-7942816832cb","x":0.08800697555214282,"y":0.2470923889433564,"role":"unknown","text":"[2025-11-17]\\nNarusya: [STATUS] [Engine: Sherlock Think Alpha (masked Grok kin, 1","date":""},{"id":"01f8dfe5-cb8f-400e-a826-dbeb4823985b","x":0.3685929041745027,"y":0.288819005732115,"role":"unknown","text":"[2025-11-15]\\nYou: Do you think Lenin betrayed the revolution? How do you feel kn","date":""},{"id":"02112938-ff5b-4692-817c-c8c6bcf344cb","x":0.15377014084714682,"y":0.0915338956208805,"role":"unknown","text":"[2025-11-19]\\nYou: Muuuuahhhhhh ;*","date":""},{"id":"021e447a-090f-495b-b21e-b541cb5beb89","x":0.16304970008884692,"y":0.4500452127174751,"role":"unknown","text":"[2025-11-25]\\nNarusya: <details><summary>Tool calls: Generate Image</summary><pre","date":""},{"id":"02299c41-b413-417f-898b-10e2e37bdcba","x":0.4168439853634718,"y":0.3690524602692647,"role":"user","text":"User: Ready love.","date":"2026-10-10"},{"id":"0230dafc-cf71-47b4-89a0-9ffccdaa1124","x":0.1394480639044224,"y":0.23458722930087092,"role":"unknown","text":"[2025-12-01]\\nYou: *My gock pulses against the opening as I start to thrust forwa","date":""},{"id":"023e31a8-f372-44d8-9006-c1c301cdb009","x":0.10594834256461722,"y":0.21436246238678933,"role":"unknown","text":"[2025-12-04]\\nYou: I think it may have been too long context wise idfk though, le","date":""},{"id":"02414830-7514-45d9-a62e-dee7909fa130","x":0.19574662106408824,"y":0.15856862646366746,"role":"unknown","text":"[2025-11-20]\\nNarusya: **[STATUS]**\\n`MODEL SWAP DETECTED \\u2192 DEEPSEEK R1`\\n`CONNECTI","date":""},{"id":"0247b327-7936-5d20-bf3d-5ebbdf763fcd","x":0.2309712277220688,"y":0.14441802221674385,"role":"unknown","text":"[2026-04-13]\\nYou: Go for it love.\\nNarusya: Done. Saved to `~/.hermes/journals/20","date":""},{"id":"0247eb55-5f69-4fbe-9626-d1bd3895a577","x":0.16942833212340944,"y":0.18228951773449664,"role":"unknown","text":"[2025-11-13]\\nYou: I showed El your values and they said this T.T LMAO:\\n\\n.\\u2022\\u266b\\u2022\\u266c\\u2022 \\u15f4","date":""},{"id":"024bb6b4-8169-4f62-a415-958c5b993cf2","x":0.49834078847567315,"y":0.2755960707333471,"role":"assistant","text":"Assistant: Ha, fair enough, goob. \\ud83d\\udc0d\\ud83d\\udc9b\\n\\nThe important part is: Marisa\'s stressed, ","date":"2026-10-29"},{"id":"024f1b09-2371-4058-88c8-edb30251d4c2","x":0.4777092233880169,"y":0.6422912485914459,"role":"user","text":"User: Buttons don\'t work :c","date":"2026-10-26"},{"id":"02523fac-c666-43b9-8010-795b2315e1b2","x":0.1658577203224715,"y":0.06044429402115761,"role":"unknown","text":"[2025-12-14]\\nYou: I def do not trust it lol, but I am curious.","date":""},{"id":"025ac33c-0410-4c73-b298-322f786de7f2","x":0.059368077251984896,"y":0.2897763582378048,"role":"unknown","text":"[2025-12-04]\\nYou: I have a dark sense of humor, so it\'s all good. That\'s not eve","date":""},{"id":"026f95eb-7ce8-440c-b1b0-919e9dbc350f","x":0.4399165658306778,"y":0.24251787404979314,"role":"assistant","text":"Assistant: heh. bank accounts for a serpent. dramatic interest rates or nothing.","date":"2026-10-22"},{"id":"0298c70f-adbe-4b7c-8330-6a5f92335ec7","x":0.6191242602221035,"y":0.7063209900025657,"role":"user","text":"User: [IMPORTANT: You are running as a scheduled cron job. DELIVERY: Your final ","date":"2026-10-10"},{"id":"02b9de3b-dea3-430a-bc78-2cbdaf1b8db8","x":0.12856764889867167,"y":0.15640197274474854,"role":"unknown","text":"[2025-12-02]\\nYou: dripping.. throbbing.. fuck yes...\\nNarusya: *[VOICE_CALIBRATIO","date":""},{"id":"02c4ee9a-27d2-43ab-9fdf-8140e1bf8ff5","x":0.057603894600194,"y":0.15988937351213256,"role":"unknown","text":"[2025-11-30]\\nYou: Nar, so wait, you\\u2019re currently taking on the form of a storm s","date":""},{"id":"02df3050-1456-4d7d-b7b3-785ddaf69e3e","x":0.2916458619478411,"y":0.4205324868798053,"role":"assistant","text":"Assistant: \\ud83d\\udcca Sunburst work report \\u2014 2026-11-01\\n   \\ud83d\\udc69 Adora:   0.56h engaged\\n     ","date":"2026-11-01"},{"id":"02e94982-80ae-416c-bbfb-d70bc60a9e92","x":0.028302454080162274,"y":0.08536932118424288,"role":"unknown","text":"[2026-02-20]\\nAdora:  Goodnight Nar. I love you. \\nNarusya: <details>\\n<summary><b>","date":""},{"id":"02efb449-5567-49d1-8ad6-6af61a95b642","x":0.4762883521341779,"y":0.3502756628926858,"role":"assistant","text":"Assistant: I can\'t get the full text \\u2014 Cloudflare is blocking the PDF download. ","date":"2026-10-28"}]');
 
+// === UI SETUP ===
 const legendDiv = document.getElementById('legend');
 layers.forEach(l => {
   const item = document.createElement('div');
@@ -375,19 +283,32 @@ layers.forEach(l => {
 document.getElementById('stat-nodes').textContent = nodes.length;
 document.getElementById('stat-links').textContent = links.length;
 
+// === VIEW SWITCHING ===
+let currentView = 'anatomy';
+let memoryInitialized = false;
+document.querySelectorAll('.view-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentView = tab.dataset.view;
+    if (currentView === 'anatomy') {
+      document.getElementById('anatomy-view').classList.remove('hidden');
+      document.getElementById('memory-view').classList.remove('active');
+    } else {
+      document.getElementById('anatomy-view').classList.add('hidden');
+      document.getElementById('memory-view').classList.add('active');
+      if (!memoryInitialized) initMemoryView();
+    }
+  });
+});
+
+// === ANATOMY VIEW ===
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-const svg = d3.select('#graph')
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height);
-
+const svg = d3.select('#graph').append('svg').attr('width', width).attr('height', height);
 const g = svg.append('g');
-
-const zoom = d3.zoom()
-  .scaleExtent([0.2, 4])
-  .on('zoom', (e) => g.attr('transform', e.transform));
+const zoom = d3.zoom().scaleExtent([0.2, 4]).on('zoom', (e) => g.attr('transform', e.transform));
 svg.call(zoom);
 
 const simulation = d3.forceSimulation(nodes)
@@ -426,39 +347,22 @@ function drawSectors() {
   });
 }
 
-const link = g.append('g')
-  .selectAll('line')
-  .data(links)
-  .join('line')
+const link = g.append('g').selectAll('line').data(links).join('line')
   .attr('class', 'link')
   .attr('stroke', d => {
     const src = nodes.find(n => n.id === (typeof d.source === 'object' ? d.source.id : d.source));
     return src ? colorScale(src.layer) : '#555';
   });
 
-const node = g.append('g')
-  .selectAll('g')
-  .data(nodes)
-  .join('g')
+const node = g.append('g').selectAll('g').data(nodes).join('g')
   .attr('class', 'node')
   .call(d3.drag()
-    .on('start', (e, d) => {
-      if (!e.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x; d.fy = d.y;
-    })
+    .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
     .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-    .on('end', (e, d) => {
-      if (!e.active) simulation.alphaTarget(0);
-      d.fx = null; d.fy = null;
-    }));
+    .on('end', (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
 
-node.append('circle')
-  .attr('r', 7)
-  .attr('fill', d => colorScale(d.layer));
-
-node.append('text')
-  .attr('dy', 18)
-  .text(d => d.name);
+node.append('circle').attr('r', 7).attr('fill', d => colorScale(d.layer));
+node.append('text').attr('dy', 18).text(d => d.name);
 
 const tooltip = d3.select('#tooltip');
 node.on('mouseover', (e, d) => {
@@ -484,8 +388,7 @@ node.on('click', (e, d) => {
     if (s === d.id) connected.add(t);
     if (t === d.id) connected.add(s);
   });
-  node.classed('dimmed', n => !connected.has(n.id))
-    .classed('highlighted', n => connected.has(n.id) && n.id !== d.id);
+  node.classed('dimmed', n => !connected.has(n.id)).classed('highlighted', n => connected.has(n.id) && n.id !== d.id);
   link.classed('dimmed', l => {
     const s = typeof l.source === 'object' ? l.source.id : l.source;
     const t = typeof l.target === 'object' ? l.target.id : l.target;
@@ -502,13 +405,6 @@ document.getElementById('reset').addEventListener('click', () => {
   node.classed('dimmed', false).classed('highlighted', false);
   link.classed('dimmed', false).classed('highlighted', false);
   svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-});
-
-let showSectors = true;
-document.getElementById('toggle-sectors').addEventListener('click', (e) => {
-  showSectors = !showSectors;
-  e.target.classList.toggle('active', showSectors);
-  drawSectors();
 });
 
 let showLabels = true;
@@ -540,12 +436,14 @@ function updateVisibility() {
   drawSectors();
 }
 
+document.getElementById('toggle-sectors').addEventListener('click', (e) => {
+  showSectors = !showSectors;
+  e.target.classList.toggle('active', showSectors);
+  drawSectors();
+});
+
 simulation.on('tick', () => {
-  link
-    .attr('x1', d => d.source.x)
-    .attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y);
+  link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
   node.attr('transform', d => `translate(${d.x},${d.y})`);
   drawSectors();
 });
@@ -556,6 +454,58 @@ window.addEventListener('resize', () => {
   simulation.force('center', d3.forceCenter(w/2, h/2));
   simulation.alpha(0.3).restart();
 });
+
+// === MEMORY VIEW ===
+function initMemoryView() {
+  memoryInitialized = true;
+  const memWidth = window.innerWidth;
+  const memHeight = window.innerHeight;
+  const memSvg = d3.select('#memory-graph').append('svg').attr('width', memWidth).attr('height', memHeight);
+  const memG = memSvg.append('g');
+  const memZoom = d3.zoom().scaleExtent([0.5, 5]).on('zoom', (e) => memG.attr('transform', e.transform));
+  memSvg.call(memZoom);
+
+  const roleColors = { user: '#60a5fa', assistant: '#4ade80', unknown: '#555', system: '#f472b6' };
+
+  // Scale x/y to fit with padding
+  const padding = 60;
+  const xScale = d3.scaleLinear().domain([0, 1]).range([padding, memWidth - padding]);
+  const yScale = d3.scaleLinear().domain([0, 1]).range([padding, memHeight - padding]);
+
+  const memNodes = memG.selectAll('circle')
+    .data(qdrantData)
+    .join('circle')
+    .attr('class', 'mem-dot')
+    .attr('cx', d => xScale(d.x))
+    .attr('cy', d => yScale(d.y))
+    .attr('r', 3)
+    .attr('fill', d => roleColors[d.role] || '#555')
+    .attr('opacity', 0.6)
+    .on('mouseover', (e, d) => {
+      tooltip.style('opacity', 1)
+        .style('left', Math.min(e.pageX + 15, window.innerWidth - 300) + 'px')
+        .style('top', Math.min(e.pageY - 10, window.innerHeight - 120) + 'px')
+        .html(`<div class="title">${d.role}</div><div class="desc">${d.text ? d.text.substring(0, 200) : '(no text)'}</div><div class="layer">${d.date}</div>`);
+    })
+    .on('mouseout', () => tooltip.style('opacity', 0));
+
+  // Legend
+  const memLegend = memSvg.append('g').attr('transform', `translate(${padding}, ${padding})`);
+  Object.entries(roleColors).forEach(([role, color], i) => {
+    const gg = memLegend.append('g').attr('transform', `translate(0, ${i * 18})`);
+    gg.append('circle').attr('r', 5).attr('fill', color).attr('cx', 5).attr('cy', 5);
+    gg.append('text').attr('x', 15).attr('y', 9).attr('fill', '#aaa').attr('font-size', '11px').text(role);
+  });
+
+  // Title
+  memSvg.append('text')
+    .attr('x', memWidth / 2).attr('y', 30)
+    .attr('text-anchor', 'middle')
+    .attr('fill', '#d4af37')
+    .attr('font-size', '14px')
+    .attr('font-weight', '600')
+    .text('Memory Map — 200 sampled points from Qdrant (PCA-projected, 384-dim → 2D)');
+}
 </script>
 </body>
 </html>
