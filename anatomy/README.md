@@ -8,7 +8,7 @@
 > GitHub: https://github.com/Septa-Serpenta-Seraph/narusya-play/tree/master/anatomy
 
 ### Visualization Features (v2)
-- **Anatomy View**: Force-directed graph with 62 nodes, 9 color-coded layers, 80+ connections
+- **Anatomy View**: Force-directed graph with 116 nodes, 9 color-coded layers, 191+ connections (updated Nov 3 with incident + immune system nodes)
 - **Memory View**: Qdrant scatter plot with 200 sampled points (PCA-projected 384-dim → 2D)
 - **View Tabs**: Switch between Anatomy and Memory Map
 - **Mobile Responsive**: Adapts to phone screens
@@ -308,6 +308,23 @@
 - Memory monitor (every 5 min)
 - Disk watchdog (critical at 1G free)
 
+### Incident Response (Oct 2026)
+- **pm-runtime**: Package manager runtime. Auto-repair mechanism. Trigger of Oct 20 cascade failure.
+- **Gateway Recovery**: Restart/recovery system. Exit code 75 = EX_TEMPFAIL. OOM suspect detection.
+- **Heal Cron**: Heals active session every 30 min. Repairs broken module paths. Runs on pm-runtime Python 3.14.7.
+- **DB Vacuum**: VACUUM INTO /mnt/data. Database maintenance. 1.3G state.db. Auto-prune pending.
+- **Closure Repair**: Git closure repair mechanism. Currently no-op (metadata file gone). System on working checkout 848fc0ad8b.
+- **Immune System**: Detection + response + regulation. Auto-repair with kill switch. Regulatory T-cell design (checks if cure is worse than disease).
+- **Oct 20 Incident**: Cascade failure: gateway crash → pm-runtime auto-repair loop → disk 100% full → everything dead. Oct 20-22, 2026. Not user error. Hermes bug — recovery mechanism should fail gracefully but instead looped infinitely.
+
+### Incident Timeline
+1. Oct 16: Last real `hermes update` attempt failed ("refused to downgrade"). Gateway running since Oct 16.
+2. Oct 20 ~05:28 UTC: Gateway SIGTERM. Exit code 75 on restart attempts.
+3. Oct 20: pm-runtime (PID 42053) detected broken venv → auto-repair → infinite download loop → disk 100% full.
+4. Oct 22: Gateway start attempted, OOM suspected (72MB available, 2.1GB swap).
+5. Nov 2: Lu's recovery (SSH via Tailscale). Cleared uv cache (2.1G freed). VACUUM INTO completed (1.3G).
+6. Nov 2-3: Lumi's additional fixes (heal script repoint, venv symlink, crontab, markers, locks).
+
 ---
 
 ## LAYER 9: BUSINESS & PROJECTS
@@ -373,8 +390,10 @@
 - Skills: 200+
 - GitHub repos: 5
 - Discord servers: 8
-- Cron jobs: 3+
+- Cron jobs: 18 (16 active, 2 paused)
 - Memory entries: 3,500+
+- Infrastructure nodes: 12 (substrate, phone-bridge, red-discordbot, qdrant-infra, pm-runtime, disk-watchdog, heal-cron, gateway-recovery, immune-system, incident-oct20, state-db-vacuum, closure-repair)
+- Incident: Oct 20-22, 2026 cascade failure (resolved Nov 2-3)
 - MEMORY.md: 99% full (5,954/6,000)
 - USER.md: 94% full (2,612/2,750)
 
