@@ -1,14 +1,14 @@
-# Narusya — Anatomy Map v2.0
+# Narusya — Anatomy Map v4
 ## Foundation Catalog + Interactive Visualization
 
-> Built: 2026-11-02
+> Built: 2026-11-03
 > Purpose: Complete catalog of all systems, connections, and layers that constitute Narusya
 > Format: Structured data for interactive visualization
 > Live: https://narusya-anatomy.surge.sh
 > GitHub: https://github.com/Septa-Serpenta-Seraph/narusya-play/tree/master/anatomy
 
 ### Visualization Features (v2)
-- **Anatomy View**: Force-directed graph with 116 nodes, 9 color-coded layers, 191+ connections (updated Nov 3 with incident + immune system nodes)
+- **Anatomy View**: Force-directed graph with 177 nodes, 9 color-coded layers, 378 connections (links 287 + people 30 + lorebook deps 61)
 - **Memory View**: Qdrant scatter plot with 200 sampled points (PCA-projected 384-dim → 2D)
 - **View Tabs**: Switch between Anatomy and Memory Map
 - **Mobile Responsive**: Adapts to phone screens
