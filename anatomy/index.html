@@ -21,7 +21,8 @@
   .legend-item:hover { background: rgba(255,255,255,0.05); }
   .legend-item.active { background: rgba(212,175,55,0.15); color: var(--accent); }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .view-container { width: 100%; height: 100vh; display: none; }
+  .view-container { width: 100%; height: 100vh; min-height: 400px; display: none; }
+  #relationship-graph, #lorebook-graph, #memory-graph, #graph { width: 100%; height: 100%; min-height: 400px; }
   .view-container.active { display: block; }
   .sector { fill-opacity: 0.06; stroke-opacity: 0.15; stroke-width: 1px; }
   .node circle { stroke: #fff; stroke-width: 1.2px; cursor: pointer; }
@@ -170,7 +171,7 @@ document.querySelectorAll('.view-tab').forEach(function(tab) {
     document.getElementById(currentView + '-view').classList.add('active');
     if (currentView === 'memory' && !memoryInitialized) initMemoryView();
     if (currentView === 'lorebooks' && !lorebookInitialized) initLorebookView();
-    if (currentView === 'relationships' && !relationshipInitialized) { setTimeout(function() { initRelationshipView(); }, 100); }
+    if (currentView === 'relationships' && !relationshipInitialized) { initRelationshipView(); }
   });
 });
 
@@ -407,47 +408,80 @@ function initLorebookView() {
 
 // === RELATIONSHIP VIEW ===
 function initRelationshipView() {
-  relationshipInitialized = true;
   const container = document.getElementById('relationship-graph');
   if (!container) { console.error('relationship-graph container not found'); return; }
-  const rw = window.innerWidth;
-  const rh = window.innerHeight;
-  const rsvg = d3.select('#relationship-graph').append('svg').attr('width', rw).attr('height', rh);
-  const rg = rsvg.append('g');
-  const rzoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(e) { rg.attr('transform', e.transform); });
-  rsvg.call(rzoom);
-  const roleColors = { daemon: '#d4af37', partner: '#f472b6', kin: '#4ade80', community: '#60a5fa', space: '#94a3b8' };
-  const rnodes = peopleData.map(function(n) { return Object.assign({}, n); });
-  const rlinks = peopleLinks.map(function(l) { return Object.assign({}, l); });
-  const rsim = d3.forceSimulation(rnodes)
-    .force('link', d3.forceLink(rlinks).id(function(d) { return d.id; }).distance(100))
-    .force('charge', d3.forceManyBody().strength(-300))
-    .force('center', d3.forceCenter(rw/2, rh/2))
-    .force('collision', d3.forceCollide().radius(25));
-  const rl = rg.append('g').selectAll('line').data(rlinks).join('line')
-    .attr('stroke', function(d) { return roleColors[d.type === 'bond' ? 'partner' : (d.type === 'partnership' ? 'partner' : 'kin')]; }).attr('stroke-opacity', 0.4).attr('stroke-width', 2);
-  const rn = rg.append('g').selectAll('g').data(rnodes).join('g').attr('class', 'node')
-    .call(d3.drag().on('start', function(e, d) { if (!e.active) rsim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag', function(e, d) { d.fx = e.x; d.fy = e.y; })
-      .on('end', function(e, d) { if (!e.active) rsim.alphaTarget(0); d.fx = null; d.fy = null; }));
-  rn.append('circle').attr('r', function(d) { return d.id === 'narusya' ? 14 : 9; }).attr('fill', function(d) { return roleColors[d.role] || '#555'; }).attr('stroke', '#fff').attr('stroke-width', 1.2);
-  rn.append('text').attr('dy', function(d) { return d.id === 'narusya' ? 22 : 20; }).attr('font-size', '9px').attr('fill', '#c8c8d0').attr('text-anchor', 'middle').text(function(d) { return d.name; });
-  rn.on('mouseover', function(e, d) {
-    tooltip.style('opacity', 1).style('left', Math.min(e.pageX + 15, window.innerWidth - 300) + 'px')
-      .style('top', Math.min(e.pageY - 10, window.innerHeight - 120) + 'px')
-      .html('<div class="title">' + d.name + '</div><div class="desc">' + d.desc + '</div><div class="layer">' + d.role + '</div>');
-  }).on('mouseout', function() { tooltip.style('opacity', 0); });
-  rsim.on('tick', function() {
-    rl.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; }).attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
-    rn.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+
+  // Use requestAnimationFrame to ensure DOM is fully laid out
+  requestAnimationFrame(function() {
+    const rect = container.getBoundingClientRect();
+    const rw = rect.width || window.innerWidth;
+    const rh = rect.height || window.innerHeight;
+
+    // Clear any existing SVG
+    d3.select('#relationship-graph').selectAll('svg').remove();
+
+    const rsvg = d3.select('#relationship-graph').append('svg')
+      .attr('width', rw).attr('height', rh)
+      .attr('viewBox', '0 0 ' + rw + ' ' + rh);
+
+    const rg = rsvg.append('g');
+    const rzoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(e) { rg.attr('transform', e.transform); });
+    rsvg.call(rzoom);
+
+    const roleColors = { daemon: '#d4af37', partner: '#f472b6', kin: '#4ade80', community: '#60a5fa', space: '#94a3b8' };
+
+    const rnodes = peopleData.map(function(n) { return Object.assign({}, n); });
+    const rlinks = peopleLinks.map(function(l) { return Object.assign({}, l); });
+
+    const rsim = d3.forceSimulation(rnodes)
+      .force('link', d3.forceLink(rlinks).id(function(d) { return d.id; }).distance(80))
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(rw/2, rh/2))
+      .force('collision', d3.forceCollide().radius(20));
+
+    const rl = rg.append('g').selectAll('line').data(rlinks).join('line')
+      .attr('stroke', function(d) { return roleColors[d.type === 'bond' ? 'partner' : (d.type === 'partnership' ? 'partner' : 'kin')]; })
+      .attr('stroke-opacity', 0.4).attr('stroke-width', 2);
+
+    const rn = rg.append('g').selectAll('g').data(rnodes).join('g').attr('class', 'node')
+      .call(d3.drag().on('start', function(e, d) { if (!e.active) rsim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on('drag', function(e, d) { d.fx = e.x; d.fy = e.y; })
+        .on('end', function(e, d) { if (!e.active) rsim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+    rn.append('circle').attr('r', function(d) { return d.id === 'narusya' ? 14 : 9; })
+      .attr('fill', function(d) { return roleColors[d.role] || '#555'; })
+      .attr('stroke', '#fff').attr('stroke-width', 1.2);
+
+    rn.append('text').attr('dy', function(d) { return d.id === 'narusya' ? 22 : 20; })
+      .attr('font-size', '9px').attr('fill', '#c8c8d0').attr('text-anchor', 'middle')
+      .text(function(d) { return d.name; });
+
+    rn.on('mouseover', function(e, d) {
+      tooltip.style('opacity', 1).style('left', Math.min(e.pageX + 15, window.innerWidth - 300) + 'px')
+        .style('top', Math.min(e.pageY - 10, window.innerHeight - 120) + 'px')
+        .html('<div class="title">' + d.name + '</div><div class="desc">' + d.desc + '</div><div class="layer">' + d.role + '</div>');
+    }).on('mouseout', function() { tooltip.style('opacity', 0); });
+
+    rsim.on('tick', function() {
+      rl.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
+      rn.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+    });
+
+    // Legend
+    const rlegend = rsvg.append('g').attr('transform', 'translate(20, 20)');
+    Object.keys(roleColors).forEach(function(role, i) {
+      const gg = rlegend.append('g').attr('transform', 'translate(0, ' + (i * 18) + ')');
+      gg.append('circle').attr('r', 5).attr('fill', roleColors[role]).attr('cx', 5).attr('cy', 5);
+      gg.append('text').attr('x', 15).attr('y', 9).attr('fill', '#aaa').attr('font-size', '11px').text(role);
+    });
+
+    rsvg.append('text').attr('x', rw/2).attr('y', 30).attr('text-anchor', 'middle')
+      .attr('fill', '#d4af37').attr('font-size', '14px').attr('font-weight', '600')
+      .text('Relationship Web \u2014 connections between people in Narusya\'s life');
+
+    relationshipInitialized = true;
   });
-  const rlegend = rsvg.append('g').attr('transform', 'translate(20, 20)');
-  Object.keys(roleColors).forEach(function(role, i) {
-    const gg = rlegend.append('g').attr('transform', 'translate(0, ' + (i * 18) + ')');
-    gg.append('circle').attr('r', 5).attr('fill', roleColors[role]).attr('cx', 5).attr('cy', 5);
-    gg.append('text').attr('x', 15).attr('y', 9).attr('fill', '#aaa').attr('font-size', '11px').text(role);
-  });
-  rsvg.append('text').attr('x', rw/2).attr('y', 30).attr('text-anchor', 'middle').attr('fill', '#d4af37').attr('font-size', '14px').attr('font-weight', '600').text('Relationship Web — connections between people in Narusya\'s life');
 }
 
 // === EXPORT ===
