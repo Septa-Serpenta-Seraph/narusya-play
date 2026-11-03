@@ -92,7 +92,7 @@
 <div id="anatomy-view" class="view-container active"><div id="graph"></div></div>
 <div id="memory-view" class="view-container"><div id="memory-graph"></div></div>
 <div id="lorebooks-view" class="view-container"><div id="lorebook-graph"></div></div>
-<div id="relationships-view" class="view-container"><div id="relationship-graph"></div></div>
+<div id="relationships-view" class="view-container"><div id="relationship-graph"></div><div id="relationship-fallback" style="padding: 20px; color: #c8c8d0; font-size: 12px; max-height: 60vh; overflow-y: auto; display: none;"><h3 style="color: #d4af37;">Relationships (text view)</h3><div id="relationship-list"></div></div></div>
 <div id="tooltip"></div>
 <div id="controls">
   <button id="reset">Reset</button>
@@ -422,7 +422,8 @@ function initRelationshipView() {
 
     const rsvg = d3.select('#relationship-graph').append('svg')
       .attr('width', rw).attr('height', rh)
-      .attr('viewBox', '0 0 ' + rw + ' ' + rh);
+      .attr('viewBox', '0 0 ' + rw + ' ' + rh)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     const rg = rsvg.append('g');
     const rzoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(e) { rg.attr('transform', e.transform); });
@@ -462,10 +463,28 @@ function initRelationshipView() {
         .html('<div class="title">' + d.name + '</div><div class="desc">' + d.desc + '</div><div class="layer">' + d.role + '</div>');
     }).on('mouseout', function() { tooltip.style('opacity', 0); });
 
+    let zoomToFitDone = false;
     rsim.on('tick', function() {
       rl.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; })
         .attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
       rn.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+
+      // Zoom to fit once simulation settles
+      if (!zoomToFitDone && rsim.alpha() < 0.05) {
+        zoomToFitDone = true;
+        const xs = rnodes.map(function(d) { return d.x; });
+        const ys = rnodes.map(function(d) { return d.y; });
+        const minX = Math.min.apply(null, xs) - 40;
+        const maxX = Math.max.apply(null, xs) + 40;
+        const minY = Math.min.apply(null, ys) - 40;
+        const maxY = Math.max.apply(null, ys) + 40;
+        const graphW = maxX - minX;
+        const graphH = maxY - minY;
+        const scale = Math.min(rw / graphW, rh / graphH, 2) * 0.85;
+        const tx = rw/2 - (minX + graphW/2) * scale;
+        const ty = rh/2 - (minY + graphH/2) * scale;
+        rsvg.transition().duration(500).call(rzoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      }
     });
 
     // Legend
@@ -481,8 +500,32 @@ function initRelationshipView() {
       .text('Relationship Web \u2014 connections between people in Narusya\'s life');
 
     relationshipInitialized = true;
+
+    // Populate fallback text list
+    const fallbackDiv = document.getElementById('relationship-list');
+    if (fallbackDiv) {
+      let html = '<ul style="list-style: none; padding: 0;">';
+      peopleData.forEach(function(p) {
+        const connected = peopleLinks.filter(function(l) { return l.source === p.id || l.target === p.id; });
+        html += '<li style="margin-bottom: 8px; padding: 6px; background: rgba(255,255,255,0.03); border-radius: 4px;">';
+        html += '<strong style="color: #d4af37;">' + p.name + '</strong> <span style="color: #888;">(' + p.role + ')</span>';
+        html += '<br><span style="color: #aaa;">' + p.desc + '</span>';
+        if (connected.length > 0) {
+          html += '<br><span style="color: #666; font-size: 10px;">Connections: ' + connected.map(function(l) { return l.source === p.id ? l.target : l.source; }).join(', ') + '</span>';
+        }
+        html += '</li>';
+      });
+      html += '</ul>';
+      fallbackDiv.innerHTML = html;
+    }
   });
 }
+
+// Toggle fallback view on double-tap or if graph fails
+document.getElementById('relationship-graph').addEventListener('dblclick', function() {
+  const fb = document.getElementById('relationship-fallback');
+  if (fb) fb.style.display = fb.style.display === 'none' ? 'block' : 'none';
+});
 
 // === EXPORT ===
 document.getElementById('export-png').addEventListener('click', function() {
