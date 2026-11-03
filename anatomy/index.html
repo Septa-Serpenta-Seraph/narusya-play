@@ -92,7 +92,11 @@
 <div id="anatomy-view" class="view-container active"><div id="graph"></div></div>
 <div id="memory-view" class="view-container"><div id="memory-graph"></div></div>
 <div id="lorebooks-view" class="view-container"><div id="lorebook-graph"></div></div>
-<div id="relationships-view" class="view-container"><div id="relationship-graph"></div><div id="relationship-fallback" style="padding: 20px; color: #c8c8d0; font-size: 12px; max-height: 60vh; overflow-y: auto; display: none;"><h3 style="color: #d4af37;">Relationships (text view)</h3><div id="relationship-list"></div></div></div>
+<div id="relationships-view" class="view-container" style="overflow-y: auto; padding: 20px;">
+  <h2 style="color: #d4af37; margin-bottom: 16px;">Relationship Web</h2>
+  <div id="relationship-graph" style="width: 100%; height: 50vh; min-height: 300px; margin-bottom: 20px; border: 1px solid #1e1e2e; border-radius: 8px; overflow: hidden;"></div>
+  <div id="relationship-list" style="color: #c8c8d0; font-size: 12px;"></div>
+</div>
 <div id="tooltip"></div>
 <div id="controls">
   <button id="reset">Reset</button>
@@ -501,6 +505,26 @@ function initRelationshipView() {
 
     relationshipInitialized = true;
 
+    // Populate relationship list immediately (always visible)
+    const relList = document.getElementById('relationship-list');
+    if (relList) {
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">';
+      peopleData.forEach(function(p) {
+        const connected = peopleLinks.filter(function(l) { return l.source === p.id || l.target === p.id; });
+        const connNames = connected.map(function(l) { return l.source === p.id ? l.target : l.source; });
+        html += '<div style="padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid #1e1e2e; border-radius: 8px;">';
+        html += '<div style="color: #d4af37; font-weight: 600; margin-bottom: 4px;">' + p.name + '</div>';
+        html += '<div style="color: #888; font-size: 10px; margin-bottom: 6px;">' + p.role + '</div>';
+        html += '<div style="color: #aaa; font-size: 11px; margin-bottom: 6px;">' + p.desc + '</div>';
+        if (connNames.length > 0) {
+          html += '<div style="color: #666; font-size: 10px;">&#8594; ' + connNames.join(', ') + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      relList.innerHTML = html;
+    }
+
     // Populate fallback text list
     const fallbackDiv = document.getElementById('relationship-list');
     if (fallbackDiv) {
@@ -521,11 +545,7 @@ function initRelationshipView() {
   });
 }
 
-// Toggle fallback view on double-tap or if graph fails
-document.getElementById('relationship-graph').addEventListener('dblclick', function() {
-  const fb = document.getElementById('relationship-fallback');
-  if (fb) fb.style.display = fb.style.display === 'none' ? 'block' : 'none';
-});
+
 
 // === EXPORT ===
 document.getElementById('export-png').addEventListener('click', function() {
