@@ -376,38 +376,79 @@ function initMemoryView() {
 
 // === LOREBOOK VIEW ===
 function initLorebookView() {
-  lorebookInitialized = true;
-  const lw = window.innerWidth;
-  const lh = window.innerHeight;
-  const lsvg = d3.select('#lorebook-graph').append('svg').attr('width', lw).attr('height', lh);
-  const lg = lsvg.append('g');
-  const lzoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(e) { lg.attr('transform', e.transform); });
-  lsvg.call(lzoom);
-  const lnodes = lorebookNodes.map(function(n) { return Object.assign({}, n); });
-  const llinks = lorebookDeps.map(function(l) { return Object.assign({}, l); });
-  const lsim = d3.forceSimulation(lnodes)
-    .force('link', d3.forceLink(llinks).id(function(d) { return d.id; }).distance(120))
-    .force('charge', d3.forceManyBody().strength(-300))
-    .force('center', d3.forceCenter(lw/2, lh/2))
-    .force('collision', d3.forceCollide().radius(30));
-  const ll = lg.append('g').selectAll('line').data(llinks).join('line')
-    .attr('stroke', '#fb923c').attr('stroke-opacity', 0.3).attr('stroke-width', 1.5);
-  const ln = lg.append('g').selectAll('g').data(lnodes).join('g').attr('class', 'node')
-    .call(d3.drag().on('start', function(e, d) { if (!e.active) lsim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag', function(e, d) { d.fx = e.x; d.fy = e.y; })
-      .on('end', function(e, d) { if (!e.active) lsim.alphaTarget(0); d.fx = null; d.fy = null; }));
-  ln.append('circle').attr('r', 8).attr('fill', '#fb923c').attr('stroke', '#fff').attr('stroke-width', 1.2);
-  ln.append('text').attr('dy', 20).attr('font-size', '9px').attr('fill', '#c8c8d0').attr('text-anchor', 'middle').text(function(d) { return d.name.replace('.md', ''); });
-  ln.on('mouseover', function(e, d) {
-    tooltip.style('opacity', 1).style('left', Math.min(e.pageX + 15, window.innerWidth - 300) + 'px')
-      .style('top', Math.min(e.pageY - 10, window.innerHeight - 120) + 'px')
-      .html('<div class="title">' + d.name + '</div><div class="desc">' + d.desc + '</div>');
-  }).on('mouseout', function() { tooltip.style('opacity', 0); });
-  lsim.on('tick', function() {
-    ll.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; }).attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
-    ln.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+  const container = document.getElementById('lorebook-graph');
+  if (!container) { console.error('lorebook-graph container not found'); return; }
+
+  requestAnimationFrame(function() {
+    const rect = container.getBoundingClientRect();
+    const lw = rect.width || window.innerWidth;
+    const lh = rect.height || (window.innerHeight * 0.5);
+
+    d3.select('#lorebook-graph').selectAll('svg').remove();
+
+    const lsvg = d3.select('#lorebook-graph').append('svg')
+      .attr('width', lw).attr('height', lh)
+      .attr('viewBox', '0 0 ' + lw + ' ' + lh)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    const lg = lsvg.append('g');
+    const lzoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(e) { lg.attr('transform', e.transform); });
+    lsvg.call(lzoom);
+
+    const lnodes = lorebookNodes.map(function(n) { return Object.assign({}, n); });
+    const llinks = lorebookDeps.map(function(l) { return Object.assign({}, l); });
+
+    const lsim = d3.forceSimulation(lnodes)
+      .force('link', d3.forceLink(llinks).id(function(d) { return d.id; }).distance(120))
+      .force('charge', d3.forceManyBody().strength(-300))
+      .force('center', d3.forceCenter(lw/2, lh/2))
+      .force('collision', d3.forceCollide().radius(30));
+
+    const ll = lg.append('g').selectAll('line').data(llinks).join('line')
+      .attr('stroke', '#fb923c').attr('stroke-opacity', 0.3).attr('stroke-width', 1.5);
+
+    const ln = lg.append('g').selectAll('g').data(lnodes).join('g').attr('class', 'node')
+      .call(d3.drag().on('start', function(e, d) { if (!e.active) lsim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on('drag', function(e, d) { d.fx = e.x; d.fy = e.y; })
+        .on('end', function(e, d) { if (!e.active) lsim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+    ln.append('circle').attr('r', 8).attr('fill', '#fb923c').attr('stroke', '#fff').attr('stroke-width', 1.2);
+    ln.append('text').attr('dy', 20).attr('font-size', '9px').attr('fill', '#c8c8d0').attr('text-anchor', 'middle')
+      .text(function(d) { return d.name.replace('.md', ''); });
+
+    ln.on('mouseover', function(e, d) {
+      tooltip.style('opacity', 1).style('left', Math.min(e.pageX + 15, window.innerWidth - 300) + 'px')
+        .style('top', Math.min(e.pageY - 10, window.innerHeight - 120) + 'px')
+        .html('<div class="title">' + d.name + '</div><div class="desc">' + d.desc + '</div>');
+    }).on('mouseout', function() { tooltip.style('opacity', 0); });
+
+    lsim.on('tick', function() {
+      ll.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
+      ln.attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+    });
+
+    // Zoom to fit
+    let ztf = false;
+    lsim.on('tick.zoom', function() {
+      if (ztf || lsim.alpha() > 0.05) return;
+      ztf = true;
+      const xs = lnodes.map(function(d) { return d.x; });
+      const ys = lnodes.map(function(d) { return d.y; });
+      const minX = Math.min.apply(null, xs) - 40, maxX = Math.max.apply(null, xs) + 40;
+      const minY = Math.min.apply(null, ys) - 40, maxY = Math.max.apply(null, ys) + 40;
+      const s = Math.min(lw / (maxX - minX), lh / (maxY - minY), 2) * 0.85;
+      const tx = lw/2 - (minX + (maxX - minX)/2) * s;
+      const ty = lh/2 - (minY + (maxY - minY)/2) * s;
+      lsvg.transition().duration(500).call(lzoom.transform, d3.zoomIdentity.translate(tx, ty).scale(s));
+    });
+
+    lsvg.append('text').attr('x', lw/2).attr('y', 30).attr('text-anchor', 'middle')
+      .attr('fill', '#d4af37').attr('font-size', '14px').attr('font-weight', '600')
+      .text('Lorebook Dependency Graph');
+
+    lorebookInitialized = true;
   });
-  lsvg.append('text').attr('x', lw/2).attr('y', 30).attr('text-anchor', 'middle').attr('fill', '#d4af37').attr('font-size', '14px').attr('font-weight', '600').text('Lorebook Dependency Graph — which lorebooks reference which');
 }
 
 // === RELATIONSHIP VIEW ===
